@@ -15,4 +15,3 @@ So you can change any code within essentially any Electron application, great (*
 ## Planned
 - [x] Modify existing ASAR file, injecting C2 client into it (eg. supply MS Teams ASAR archive and receive back modified archive with embedded C2).
 - [ ] File upload/download.
-- [ ] 
