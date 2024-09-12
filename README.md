@@ -13,10 +13,11 @@ So you can change any code within essentially any Electron application, great (*
 
 ## Features
 ### Current
-- Execute commands remotely through an Electron app (with Node JS enabled).
+- Execute commands remotely through an Electron app (with Node JS integration enabled).
 - Inject C2 into legitimate ASAR archive.
 - TLS encryption.
 - Request randomisation.
+- File upload and download.
 ### Planned
 - [x] Modify existing ASAR file, injecting C2 client into it (eg. supply MS Teams ASAR archive and receive back modified archive with embedded C2).
 - [x] File upload/download.
@@ -26,22 +27,26 @@ So you can change any code within essentially any Electron application, great (*
 ### Getting Started
 1. Most Electron apps store their ASAR archive in `%LOCALAPPDATA%\[application name]\[version]\resources\app.asar`, make a copy of this and keep somewhere safe.
 
-2. Run the server script with `python server.py`. 
+2. Before you start the server for the first you'll have to generate the TLS cert and private key. You can do this with the command `openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes` **make sure that the key and cert are named they are in this command, the script is looking for these specific files!!**
+
+3. Run the server script with `python server.py`. 
 
 *Note: if you run into issues you may need to specify python version 3, eg. `python3 server.py`*
 
-3. You'll be prompted if you want to create an ASAR archive, enter `y`.
-4. Next provide the server's IP address.
-5. Now provide to the ASAR file you ~~stole~~ copied and it will do all the work for you. The archive created will be called `app.asar`.
+4. You'll be prompted if you want to create an ASAR archive, enter `y`.
+5. Next provide the server's IP address.
+6. Now provide to the ASAR file you ~~stole~~ copied and it will do all the work for you. The archive created will be called `app.asar`.
 
 ![Screenshot of asar creation](screenshot.png)
 
-6. All you need to do now is replace the *legitimate* ASAR file of your target application. eg. if you want to backdoor Discord, overwrite the current ASAR archive in `%LOCALAPPDATA%\Discord\app-[versionnumber]\resources\`.
-7. Launch the application and you'll have a C2 connection.
+7. All you need to do now is replace the *legitimate* ASAR file of your target application. eg. if you want to backdoor Discord, overwrite the current ASAR archive in `%LOCALAPPDATA%\Discord\app-[versionnumber]\resources\`.
+8. Launch the application and you'll have a C2 connection.
 
 ### Commanding and Controlling
 Right now, the C2 is very simple. You can run any command that is supported by the OS the application is installed on (*most likely Windows*). There are a few extra commands:
 
+- `getpid` will display the process ID of the implant.
+- `kill` will kill the entire Electron application that the implant is running within (**yes this is the desired functionality**).
 - `history` will show your previous commands.
 - `banner`  will display the really cool nice looking logo.
 - `help` will tell you what I'm telling you right now.
@@ -81,4 +86,4 @@ Credit to L>>K (Andrew Kisliakov) for his [article discussing ASAR modification 
 
 And special thanks to [Aurillium](https://github.com/Aurillium) for translating my cursed C++ spaghetti code into Python so that I could actually read my own code.
 
-
+Some further reading I'd recommend is the [MITRE ATT&CK page](https://attack.mitre.org/techniques/T1218/015/) entirely dedicated to Electron applications, in which one of their recommended mitigations is to simply remove Electron applications from your environment (can't say I disagree with that one). It also discusses other ways to exploit Electron applications.
