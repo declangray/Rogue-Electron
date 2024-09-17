@@ -1,5 +1,7 @@
 # Rogue Electron 😈
 A C2 server designed to run within Electron applications.
+## Disclaimer!!!!
+**This project is for demonstration/educational purposes only! Do not install a C2 on any system you do not have explicit permission to do so on. Be smart, do not break the law. I am not responsible for any malicious/illegal activity that may be conducted with this program.**
 ## Backstory
 ### The Electron Problem
 #### ASAR Archives
