@@ -57,7 +57,7 @@ Right now, the C2 is very simple. You can run any command that is supported by t
 
 ## Compatibility
 
-This exploit doesn't work on all Electron applications, as I mentioned earlier this can be mitigated through ASAR integrity checking. There may also be applications where ASAR Integrity checking is disabled, but Node integration is not used therefore the C2 is unable to execute commands.
+This exploit doesn't work on all Electron applications, as I mentioned earlier this can be mitigated through ASAR integrity checking. There may also be applications where ASAR Integrity checking is disabled, but Node integration is not used therefore the C2 is unable to execute commands. I have only tested this on Windows, but theoretically it should work on any OS as long as the Electron application has the necessary security vulnerabilities.
 
 This is a list of applications I've tested ASAR modification on (ones with ticks fully work with Rogue Electron, those without have not been tested).
 
