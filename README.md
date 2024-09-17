@@ -63,8 +63,10 @@ This is a list of applications I've tested ASAR modification on (ones with ticks
 
 - [x] Discord
 - [x] Microsoft Teams (Classic)
-- [ ] Visual Studio Code 
+- [x] VS Code*
 - [ ] Obsidian
+
+*VS Code does not actually use an ASAR archive, instead it has what is essentially an decompressed archive located in `%LocalAppData%\Programs\Microsoft VS Code\resources\app`. By modifying the main script under `.\out\main.js` to include implant code the same effect can be achieved.
 
 The following list is Electron applications that seemingly have ASAR integrity checking enabled (or at least I was unable to modify the ASAR archive):
 
