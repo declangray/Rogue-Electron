@@ -22,6 +22,7 @@ So you can change any code within essentially any Electron application, great (*
 - [x] Modify existing ASAR file, injecting C2 client into it (eg. supply MS Teams ASAR archive and receive back modified archive with embedded C2).
 - [x] File upload/download.
 - [x] Client killing
+- [ ] Persistance between updates (currently, when an app updates it will *usually* download a new ASAR archive replacing the backdoored one).
 - [ ] Multiple sessions/session handling.
 ## Usage
 ### Getting Started
