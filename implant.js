@@ -168,4 +168,4 @@ function sendOutput(output) {
     req.end();
 }
 
-setInterval(pollServer, 500);
+setInterval(pollServer, 5000);
