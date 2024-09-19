@@ -130,7 +130,7 @@ def decodeFile(filePath, content):
         file.write(decoded)
 
 def clearScreen():
-    print("\n"*1000)
+    print("\033[H\033[J", end="")
  
 def printHeader():
     print(f"""{bcolors.FAIL} 
