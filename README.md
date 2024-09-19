@@ -7,17 +7,19 @@ A C2 server designed to run within Electron applications.
 ### Getting Started
 To run the server you'll need python (version 3) and openssl installed, all other dependencies will be installed by the setup script.
 
-1. Most Electron apps store their ASAR archive in `%LOCALAPPDATA%\[application name]\[version]\resources\app.asar`, make a copy of this and keep somewhere safe.
+1. Most Electron apps store their ASAR archive in `%LOCALAPPDATA%\[application name]\[version]\resources\app.asar`, grab this from your victim system, make a copy of it and keep it somewhere safe.
 
-2. Run the setup script with the command `sudo chmod +x ./setup.sh && ./setup.sh`
+2. Download Rogue Electron onto your *attacker* system with `git clone https://github.com/declangray/Rogue-Electron && cd Rogue-Electron`
 
-3. Run the server script with `sudo python server.py`. **Note!!** *the server must be run as sudo*
+3. Run the setup script with the command `sudo chmod +x ./setup.sh && ./setup.sh`
+
+4. Run the server script with `sudo python server.py`. **Note!!** *the server must be run as sudo*
 
 *If you run into issues you may need to specify python version 3, eg. `sudo python3 server.py`*
 
-4. You'll be prompted if you want to create an ASAR archive, enter `y`.
-5. Next provide the server's IP address.
-6. Now provide to the ASAR file you ~~stole~~ copied and it will do all the work for you. The archive created will be called `app.asar`.
+5. You'll be prompted if you want to create an ASAR archive, enter `y`.
+6. Next provide the server's IP address.
+7. Now provide to the ASAR file you ~~stole~~ copied and it will do all the work for you. The archive created will be called `app.asar`.
 
 ![Screenshot of asar creation](screenshot.png)
 
