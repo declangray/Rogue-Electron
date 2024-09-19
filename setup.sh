@@ -25,6 +25,7 @@ install_packages() {
 
 generate_cert() {
     echo "Generating TLS/SSL certificate..."
+    mkdir ./Server/TLS
     openssl req -x509 -newkey rsa:4096 -keyout ./Server/TLS/key.pem -out ./Server/TLS/cert.pem -days 365 -nodes -subj "/CN="
 }
 

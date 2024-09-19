@@ -30,7 +30,7 @@ To run the server you'll need python (version 3) and openssl installed, all othe
 The archive created will be called `app.asar`.
 
 ![Screenshot of asar creation](screenshot.png)
-ASAR Archive Generation Process
+*ASAR Archive Generation Process*
 
 6. All you need to do now is get the backdoored ASAR archive onto the victim system, replacing the original ASAR archive.
 7. Launch the application and you'll have a C2 connection!
