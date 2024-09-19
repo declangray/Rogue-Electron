@@ -9,22 +9,31 @@ To run the server you'll need python (version 3) and openssl installed, all othe
 
 1. Most Electron apps store their ASAR archive in `%LOCALAPPDATA%\[application name]\[version]\resources\app.asar`, grab this from your victim system, make a copy of it and keep it somewhere safe.
 
-2. Download Rogue Electron onto your *attacker* system with `git clone https://github.com/declangray/Rogue-Electron && cd Rogue-Electron`
+2. Download Rogue Electron onto your *attacker* system with:
 
-3. Run the setup script with the command `sudo chmod +x ./setup.sh && ./setup.sh`
+ `git clone https://github.com/declangray/Rogue-Electron && cd Rogue-Electron`
 
-4. Run the server script with `sudo python server.py`. **Note!!** *the server must be run as sudo*
+3. Run the setup script with the command:
+
+ `sudo chmod +x ./setup.sh && ./setup.sh`
+
+4. Launch the server:
+
+`sudo python server.py`
+
+**Note!!** *the server must be run as sudo.*
 
 *If you run into issues you may need to specify python version 3, eg. `sudo python3 server.py`*
 
-5. You'll be prompted if you want to create an ASAR archive, enter `y`.
-6. Next provide the server's IP address.
-7. Now provide to the ASAR file you ~~stole~~ copied and it will do all the work for you. The archive created will be called `app.asar`.
+5. You'll be prompted if you want to create an ASAR archive, assuming this is your first time, enter `y` and follow the setup. The server will automatically generate a backdoored ASAR archive for you to implant onto the victim machine.
+
+The archive created will be called `app.asar`.
 
 ![Screenshot of asar creation](screenshot.png)
+ASAR Archive Generation Process
 
-7. All you need to do now is replace the *legitimate* ASAR file of your target application. eg. if you want to backdoor Discord, overwrite the current ASAR archive in `%LOCALAPPDATA%\Discord\app-[versionnumber]\resources\`.
-8. Launch the application and you'll have a C2 connection.
+6. All you need to do now is get the backdoored ASAR archive onto the victim system, replacing the original ASAR archive.
+7. Launch the application and you'll have a C2 connection!
 
 ### Commanding and Controlling
 Right now, the C2 is very simple. You can run any command that is supported by the OS the application is installed on (*most likely Windows*). There are a few extra commands:
