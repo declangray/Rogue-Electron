@@ -32,9 +32,9 @@ So you can change any code within essentially any Electron application, great (*
 
 2. Before you start the server for the first you'll have to generate the TLS cert and private key. You can do this with the command `openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -nodes` **make sure that the key and cert are named they are in this command, the script is looking for these specific files!!**
 
-3. Run the server script with `python server.py`. 
+3. Run the server script with `sudo python server.py`. **Note!!** *the server must be run as sudo*
 
-*Note: if you run into issues you may need to specify python version 3, eg. `python3 server.py`*
+*Note: if you run into issues you may need to specify python version 3, eg. `sudo python3 server.py`*
 
 4. You'll be prompted if you want to create an ASAR archive, enter `y`.
 5. Next provide the server's IP address.
