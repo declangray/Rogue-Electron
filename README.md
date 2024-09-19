@@ -74,21 +74,20 @@ So you can change any code within essentially any Electron application, great (*
 
 ## Compatibility
 
-This exploit doesn't work on all Electron applications, as I mentioned earlier this can be mitigated through ASAR integrity checking. There may also be applications where ASAR Integrity checking is disabled, but Node integration is not used therefore the C2 is unable to execute commands. I have only tested this on Windows, but theoretically it should work on any OS as long as the Electron application has the necessary security vulnerabilities.
+This exploit doesn't work on all Electron applications, as I mentioned earlier this can be mitigated through ASAR integrity checking. There may also be applications where ASAR Integrity checking is disabled, but Node integration is not used therefore the C2 is unable to execute commands, in this case the ASAR archive can still be used for arbitrary code execution. I have only tested this on Windows, but theoretically it should work on any OS as long as the Electron application has the necessary security vulnerabilities.
 
-This is a list of applications I've tested ASAR modification on (ones with ticks fully work with Rogue Electron, those without have not been tested).
+This is a list of applications I've tested ASAR modification on.
 
-- [x] Discord
-- [x] Microsoft Teams (Classic)
-- [x] VS Code*
-- [ ] Obsidian
+| Application   | Fully Compatible  | ASAR Modification     | Not Modifiable    |
+| :------------ | :---------------: | :-------------------: | :---------------: |
+| Discord       | ✅                | ✅                    |                   |
+| Microsoft Teams Classic   | ✅    | ✅                    |                   |
+| VS Code*      | ✅                | ✅                    |                   |
+| Obsidian      | (Not tested)      | ✅                    |                   |
+| Signal        |                   |                       | ✅                |
+| Slack         |                   |                       | ✅                |
 
 *VS Code does not actually use an ASAR archive, instead it has what is essentially an decompressed archive located in `%LocalAppData%\Programs\Microsoft VS Code\resources\app`. By modifying the main script under `.\out\main.js` to include implant code the same effect can be achieved.
-
-The following list is Electron applications that seemingly have ASAR integrity checking enabled (or at least I was unable to modify the ASAR archive):
-
-- [x] Signal
-- [x] Slack
 
 ## Detection
 ### Anti-Virus
