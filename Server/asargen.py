@@ -242,7 +242,9 @@ def createAsarFile(asarArchive, ipaddress, port):
 
         #use npx to generate app.asar
         print("Generating ASAR archive: app.asar")
-        subprocess.run(f'npx asar p {tempDir} app.asar', shell=True)
+        if not os.path.exists("../Output"):
+            subprocess.run("mkdir ../Output", shell=True)
+        subprocess.run(f'npx asar p {tempDir} ../Output/app.asar', shell=True)
 
     else:
         print("Error extracting ASAR archive.")

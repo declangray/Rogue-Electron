@@ -185,7 +185,7 @@ def generateAsar():
             asarFile = ""
 
     createAsarFile(asarFile, ADDRESS, PORT)
-    print("Successfully created implant \"app.asar!\"")
+    print("Successfully created implant \"Output/app.asar!\"")
 
 def input_thread():
     printHeader()
