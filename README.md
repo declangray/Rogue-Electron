@@ -27,7 +27,7 @@ To run the server you'll need python (version 3) and openssl installed, all othe
 
 5. You'll be prompted if you want to create an ASAR archive, assuming this is your first time, enter `y` and follow the setup. The server will automatically generate a backdoored ASAR archive for you to implant onto the victim machine.
 
-The archive created will be called `app.asar`.
+The archive created will be called `app.asar` and placed in the `Output` directory.
 
 ![Screenshot of asar creation](screenshot.png)
 *ASAR Archive Generation Process*
@@ -83,15 +83,19 @@ This is a list of applications I've tested ASAR modification/Rogue Electron on.
 | Discord       | ✅                | ✅                    |                   |
 | Microsoft Teams Classic   | ✅    | ✅                    |                   |
 | VS Code*      | ✅                | ✅                    |                   |
-| Obsidian**    |✅                 | ✅                    |                   |
+| Obsidian      |✅                 | ✅                    |                   |
 | Signal        |                   |                       | ✅                |
 | Slack         |                   |                       | ✅                |
 
 **Note:** Fully Compatible means that the ASAR archive can be modified and the C2 can execute commands.
 
-*VS Code does not actually use an ASAR archive, instead it has what is essentially an decompressed archive located in `%LocalAppData%\Programs\Microsoft VS Code\resources\app`. By modifying the main script under `.\out\main.js` to include implant code the same effect can be achieved.
+*VS Code does not actually use an ASAR archive, instead it has what is essentially an decompressed archive located in `%LocalAppData%\Programs\Microsoft VS Code\resources\app`. By modifying the main script under `.\out\main.js` to include implant code, the same effect can be achieved.
 
-**When injecting the backdoor into Obsidian's ASAR archive, you'll see an error similar to `Error: ENOENT: no such file or directory`, however the backdoored ASAR archive is still generated. I suspect this is because Obsidian has two ASAR archives, `app.asar` and `obsidian.asar`, and app.asar is attempting to reference a file thats in obsidian.asar, hence the error. This causes issues as the ASAR file it generates it will completely break Obsidian (it won't run at all), however the C2 still works and that's what matters... right?
+**Note:** On some occassions, you'll see this error when generating an ASAR archive:  
+
+`Error: ENOENT: no such file or directory`
+
+This will result in the generated ASAR archive essentially being half generated, the C2 will still work, but the original application will not launch. This is because some ASAR archives contain references to external files, for example, Obsidian has another ASAR archive, `obsidian.asar`, which contains files that the main archive, `app.asar`, references. To avoid this error, you will need to have all of the necessary files (also with the correct names in some instances) within the same directory as the ASAR archive when generating the backdoored archive.
 
 ## Detection
 ### Anti-Virus
