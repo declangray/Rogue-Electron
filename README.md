@@ -76,18 +76,22 @@ So you can change any code within essentially any Electron application, great (*
 
 This exploit doesn't work on all Electron applications, as I mentioned earlier this can be mitigated through ASAR integrity checking. There may also be applications where ASAR Integrity checking is disabled, but Node integration is not used therefore the C2 is unable to execute commands, in this case the ASAR archive can still be used for arbitrary code execution. I have only tested this on Windows, but theoretically it should work on any OS as long as the Electron application has the necessary security vulnerabilities.
 
-This is a list of applications I've tested ASAR modification on.
+This is a list of applications I've tested ASAR modification/Rogue Electron on.
 
 | Application   | Fully Compatible  | ASAR Modification     | Not Modifiable    |
 | :------------ | :---------------: | :-------------------: | :---------------: |
 | Discord       | ✅                | ✅                    |                   |
 | Microsoft Teams Classic   | ✅    | ✅                    |                   |
 | VS Code*      | ✅                | ✅                    |                   |
-| Obsidian      | (Not tested)      | ✅                    |                   |
+| Obsidian**    |✅                 | ✅                    |                   |
 | Signal        |                   |                       | ✅                |
 | Slack         |                   |                       | ✅                |
 
+**Note:** Fully Compatible means that the ASAR archive can be modified and the C2 can execute commands.
+
 *VS Code does not actually use an ASAR archive, instead it has what is essentially an decompressed archive located in `%LocalAppData%\Programs\Microsoft VS Code\resources\app`. By modifying the main script under `.\out\main.js` to include implant code the same effect can be achieved.
+
+**When injecting the backdoor into Obsidian's ASAR archive, you'll see an error similar to `Error: ENOENT: no such file or directory`, however the backdoored ASAR archive is still generated. I suspect this is because Obsidian has two ASAR archives, `app.asar` and `obsidian.asar`, and app.asar is attempting to reference a file thats in obsidian.asar, hence the error. This causes issues as the ASAR file it generates it will completely break Obsidian (it won't run at all), however the C2 still works and that's what matters... right?
 
 ## Detection
 ### Anti-Virus
