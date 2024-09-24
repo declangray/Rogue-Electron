@@ -47,6 +47,19 @@ The archive created will be called `app.asar` and placed in the `Output` directo
 6. All you need to do now is get the backdoored ASAR archive onto the victim system, replacing the original ASAR archive.
 7. Launch the application and you'll have a C2 connection!
 
+### Sessions
+Before you select a session there are a few commands you can use:
+- `sessions` will list the current sessions.
+- `use` to select a session (eg `use 0` to select session 0).
+- `help` to display the help message.
+- `exit` to exit. 
+
+When a session is created, you'll see a message similar to:
+
+`[!] New session: [sessionID]`
+
+**Please note that session handling is currently in development. Sessions cannot yet be backgrounded, and there are several other issues surrounding them. It is recommended for now to just stick to a single session.**
+
 ### Commanding and Controlling
 Right now, the C2 is very simple. You can run any command that is supported by the OS the application is installed on (*most likely Windows*). There are a few extra commands:
 
@@ -85,7 +98,7 @@ So you can change any code within essentially any Electron application, great (*
 - [x] File upload/download.
 - [x] Client killing
 - [ ] Persistance between updates (currently, when an app updates it will *usually* download a new ASAR archive replacing the backdoored one).
-- [ ] Multiple sessions/session handling.
+- [x] Multiple sessions/session handling.
 
 ## Compatibility
 
