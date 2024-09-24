@@ -44,9 +44,6 @@ The ASAR archive will be located in the `resources` folder of the application's 
 
 The archive created will be called `app.asar` and placed in the `Output` directory.
 
-![Screenshot of asar creation](screenshot.png)
-*ASAR Archive Generation Process*
-
 6. All you need to do now is get the backdoored ASAR archive onto the victim system, replacing the original ASAR archive.
 7. Launch the application and you'll have a C2 connection!
 
@@ -61,6 +58,11 @@ Right now, the C2 is very simple. You can run any command that is supported by t
 - `help` will tell you what I'm telling you right now.
 - `exit` will exit the program ***note:** this will not kill the client, which will still be trying to ping the server!*
 
+### Demo Video
+
+<video with="320" height="240" controls>
+    <source src="demo.mp4" type="video/mp4">
+</video>
 
 ## Backstory
 ### The Electron Problem
