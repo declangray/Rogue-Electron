@@ -3,11 +3,26 @@ A C2 server designed to run within Electron applications.
 ## Disclaimer!!!!
 **This project is for demonstration/educational purposes only! Do not install a C2 on any system you do not have explicit permission to do so on. Be smart, do not break the law. I am not responsible for any malicious/illegal activity that may be conducted with this program.**
 
+## Contents
+
+1. [Usage](#usage)
+2. [Backstory](#backstory)
+3. [Features](#features)
+4. [Compatibility](#compatibility)
+5. [Detection](#detection)
+6. [Acknowlegements](#acknowlegements)
+
 ## Usage
 ### Getting Started
 To run the server you'll need python (version 3) and openssl installed, all other dependencies will be installed by the setup script.
 
-1. Most Electron apps store their ASAR archive in `%LOCALAPPDATA%\[application name]\[version]\resources\app.asar`, grab this from your victim system, make a copy of it and keep it somewhere safe.
+1. Get an ASAR archive from your application of choice:
+
+The ASAR archive will be located in the `resources` folder of the application's main directory.
+
+- On Windows, most Electron apps are typically installed within the `%LOCALAPPDATA%` directory. On Windows it is common for Electron applications to have a folder for their specific version (or it may just be called current) within the application directory.
+
+- On MacOS, you can find the resources folder under `/Applications/[application].app/Contents/Resources`.
 
 2. Download Rogue Electron onto your *attacker* system with:
 
