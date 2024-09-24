@@ -60,9 +60,7 @@ Right now, the C2 is very simple. You can run any command that is supported by t
 
 ### Demo Video
 
-<video with="320" height="240" controls>
-    <source src="demo.mp4" type="video/mp4">
-</video>
+https://github.com/user-attachments/assets/993acb5c-f98b-4e04-a489-982b25edbe55
 
 ## Backstory
 ### The Electron Problem
