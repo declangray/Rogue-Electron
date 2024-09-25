@@ -98,6 +98,7 @@ So you can change any code within essentially any Electron application, great (*
 - TLS encryption.
 - Request randomisation.
 - File upload and download.
+- Multiple session handling.
 ### Planned
 - [x] Modify existing ASAR file, injecting C2 client into it (eg. supply MS Teams ASAR archive and receive back modified archive with embedded C2).
 - [x] File upload/download.
