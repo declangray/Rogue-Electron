@@ -16,23 +16,15 @@ A C2 server designed to run within Electron applications.
 ### Getting Started
 To run the server you'll need python (version 3) and openssl installed, all other dependencies will be installed by the setup script.
 
-1. Get an ASAR archive from your application of choice:
-
-The ASAR archive will be located in the `resources` folder of the application's main directory.
-
-- On Windows, most Electron apps are typically installed within the `%LOCALAPPDATA%` directory. On Windows it is common for Electron applications to have a folder for their specific version (or it may just be called current) within the application directory.
-
-- On MacOS, you can find the resources folder under `/Applications/[application].app/Contents/Resources`.
-
-2. Download Rogue Electron onto your *attacker* system with:
+1. Download Rogue Electron with:
 
  `git clone https://github.com/declangray/Rogue-Electron && cd Rogue-Electron`
 
-3. Run the setup script with the command:
+2. Run the setup script with the command:
 
  `sudo chmod +x ./setup.sh && ./setup.sh`
 
-4. Launch the server:
+3. Launch the server:
 
 `sudo python server.py`
 
@@ -40,15 +32,27 @@ The ASAR archive will be located in the `resources` folder of the application's 
 
 *If you run into issues you may need to specify python version 3, eg. `sudo python3 server.py`*
 
-5. You'll be prompted if you want to create an ASAR archive, assuming this is your first time, enter `y` and follow the setup. The server will automatically generate a backdoored ASAR archive for you to implant onto the victim machine.
+4. Specify a port to listen on. (Leaving this blank will use port 1337).
+
+5. After setting a listening port, use the `generate` command to generate a malicious ASAR archive, supplying a legitimate archive to inject the implant into.
+
+ASAR archives are typically located in the `resources` folder within an Electron application's main directory.
+
+- On Windows, most Electron apps are typically installed within the `%LOCALAPPDATA%` directory. On Windows it is common for Electron applications to have a folder for their specific version (or it may just be called current) within the application directory.
+
+- On MacOS, you can find the resources folder under `/Applications/[application].app/Contents/Resources`.
 
 The archive created will be called `app.asar` and placed in the `Output` directory.
 
+Alternatively, you can run the implant locally using `node implant.js`.
+
 6. All you need to do now is get the backdoored ASAR archive onto the victim system, replacing the original ASAR archive.
+
 7. Launch the application and you'll have a C2 connection!
 
 ### Sessions
 Before you select a session there are a few commands you can use:
+- `generate` to generate a malicious ASAR archive.
 - `sessions` will list the current sessions.
 - `use` to select a session (eg `use 0` to select session 0).
 - `help` to display the help message.
@@ -58,18 +62,19 @@ When a session is created, you'll see a message similar to:
 
 `[!] New session: [sessionID]`
 
-**Please note that session handling is currently in development. Sessions cannot yet be backgrounded, and there are several other issues surrounding them. It is recommended for now to just stick to a single session.**
-
 ### Commanding and Controlling
-Right now, the C2 is very simple. You can run any command that is supported by the OS the application is installed on (*most likely Windows*). There are a few extra commands:
+Right now, the C2 is very simple. You can run any command that is supported by the OS the application is installed on. There are a few extra commands:
 
 - `getpid` will display the process ID of the implant.
+- `back` will background the current session.
 - `kill` will kill the entire Electron application that the implant is running within (**yes this is the desired functionality**).
 - `clear` clears the screen.
 - `history` will show your previous commands.
 - `banner`  will display the really cool nice looking logo.
 - `help` will tell you what I'm telling you right now.
 - `exit` will exit the program ***note:** this will not kill the client, which will still be trying to ping the server!*
+
+**Note:** On Windows, the implant will be running as command prompt so PowerShell commands will not work unless you specify `powershell` before the desired command.
 
 ### Demo Video
 
