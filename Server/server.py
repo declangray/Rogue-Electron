@@ -8,7 +8,6 @@ import readline
 import threading
 import uvicorn
 from asargen import createAsarFile
-#import asyncio
 import time
 from datetime import datetime
 
@@ -60,7 +59,6 @@ class bcolors:
     UNDERLINE = '\033[4m'
 
 app = FastAPI()
-#asyncio.create_task(checkTimeout())
 
 global_lock = True
 global_connection = False
@@ -102,13 +100,20 @@ outputRequests = [
 clients = []
 
 def checkTimeout():
+    global CURRENT_SESSION
     while True:
         if len(SESSIONS) != 0:
             for i, session in enumerate(SESSIONS):
-                if (time.time() - session.get_info('Last-Check-In')) > 30:
+                #if difference between now and last check in is more than TIMEOUT value (in seconds)
+                if (time.time() - session.get_info('Last-Check-In')) > TIMEOUT:
                     print(f"\n{bcolors.FAIL}[!]{bcolors.ENDC} Session timeout: {session.get_info('ID')}.")
-                    client = clients.index(session.get_info('Address'))
-                    clients.pop(client)
+                    #if current session, set current session to none
+                    if CURRENT_SESSION == session.get_info('Address'):
+                        CURRENT_SESSION = 'none'
+                    #remove session from previous clients
+                    client = clients.index(session.get_info('Address')) 
+                    clients.pop(client) 
+                    #remove session from sessions
                     SESSIONS.pop(i)
                     
         time.sleep(5)
@@ -170,7 +175,6 @@ async def download_file(file: str, request: Request):
     client = getIP(request)
     if client == CURRENT_SESSION:
         data: dict = await request.json()
-        #print(file, data["result"])
         decodeFile(file, data["result"])
 
 @app.get("/{path:path}", response_class=PlainTextResponse)
