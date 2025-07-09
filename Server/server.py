@@ -462,5 +462,4 @@ if not os.path.exists(tls_key) or not os.path.exists(tls_cert):
     sys.exit()
 
 if True:
-    print("hello")
     uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="critical", ssl_keyfile=tls_key, ssl_certfile=tls_cert) #start web server on current host (0.0.0.0) using the PORT variable
