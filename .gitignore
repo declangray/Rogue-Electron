@@ -168,3 +168,4 @@ node_modules/
 Output/
 package.json
 package-lock.json
+*.asar

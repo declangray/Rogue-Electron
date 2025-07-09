@@ -7,9 +7,10 @@ import keyboard
 import readline
 import threading
 import uvicorn
-from asargen import createAsarFile
+from Server.asargen import createAsarFile
 import time
 from datetime import datetime
+import sys
 
 class SESSION:
     def __init__(self):
@@ -433,5 +434,17 @@ print(f"Starting listener on port: {PORT}!")
 
 threading.Thread(target = input_thread).start()
 threading.Thread(target = checkTimeout).start()
+
+    
+scriptpath = os.path.dirname(__file__)
+
+tls_key = f"{scriptpath}/TLS/key.pem"
+tls_cert =  f"{scriptpath}/TLS/cert.pem"
+
+
+if not os.path.exists(tls_key) or not os.path.exists(tls_cert):
+    print("Error, TLS certificate files not found. Please generate.")
+    sys.exit()
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="critical", ssl_keyfile="TLS/key.pem", ssl_certfile="TLS/cert.pem") #start web server on current host (0.0.0.0) using the PORT variable
+    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="critical", ssl_keyfile=tls_key, ssl_certfile=tls_cert) #start web server on current host (0.0.0.0) using the PORT variable
